@@ -1,0 +1,50 @@
+{
+  "name": "talkietool",
+  "displayName": "TalkieTool",
+  "description": "Voice communication interface for gaming",
+  "version": "1.0.0",
+  "slug": "talkietool",
+  "scheme": "talkietool",
+  "platforms": ["ios", "android"],
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "userInterfaceStyle": "dark",
+  "plugins": [
+    "expo-av",
+    "expo-camera",
+    "expo-microphone",
+    "expo-keep-awake",
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "usesCleartextTraffic": true
+        }
+      }
+    ]
+  ],
+  "permissions": [
+    "android.permission.RECORD_AUDIO",
+    "android.permission.INTERNET",
+    "android.permission.CHANGE_NETWORK_STATE",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "ios.permission.MICROPHONE"
+  ],
+  "ios": {
+    "supportsTabletMode": true,
+    "bundleIdentifier": "com.talkietool.app",
+    "infoPlist": {
+      "NSMicrophoneUsageDescription": "We need microphone access to enable voice communication",
+      "NSLocalNetworkUsageDescription": "We use local network to optimize voice quality",
+      "NSBonjourServices": ["_talkietool._tcp"]
+    }
+  },
+  "android": {
+    "package": "com.talkietool.app",
+    "versionCode": 1,
+    "usesCleartextTraffic": true
+  },
+  "web": {
+    "favicon": "./assets/icon.png"
+  }
+}
