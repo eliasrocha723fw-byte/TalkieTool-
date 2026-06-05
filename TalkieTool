@@ -1,0 +1,114 @@
+```
+/app/
+├── backend/
+│   ├── server.py              ← Backend FastAPI (todas las rutas)
+│   ├── requirements.txt       ← Librerías Python
+│   └── .env                   ← Variables sensibles (Mongo, Stripe)
+└── frontend/
+    ├── app.json               ← Config Expo (nombre, ícono, permisos)
+    ├── package.json           ← Librerías React Native
+    ├── .env                   ← URL del backend
+    ├── app/                   ← Pantallas (expo-router)
+    │   ├── _layout.tsx        ← Layout raíz + carga de fuentes
+    │   ├── index.tsx          ← Splash
+    │   ├── login.tsx          ← Login (nickname / Google)
+    │   ├── home.tsx           ← Lobby (crear/unirse sala)
+    │   ├── room/[code].tsx    ← Sala activa con PTT
+    │   ├── premium.tsx        ← Pantalla Premium / Stripe
+    │   ├── premium-success.tsx ← Confirmación post-pago
+    │   ├── settings.tsx       ← Ajustes
+    │   └── auth-callback.tsx  ← Callback de Google Auth
+    └── src/
+        ├── api.ts             ← Cliente API + sesión
+        ├── theme.ts           ← Colores y diseño
+        └── FloatingBubble.tsx ← Burbuja flotante draggable
+```
+
+---
+
+## 🔧 Backend (`/app/backend/`)
+
+### `server.py` (principal — 516 líneas)
+Action: file_editor view /app/backend/server.py
+Observation: [Showing lines 1-80 of 514 total] /app/backend/server.py:
+1|from fastapi import FastAPI, APIRouter, HTTPException, Request, Header, Cookie, Response
+2|from fastapi.responses import JSONResponse
+3|from dotenv import load_dotenv
+4|from starlette.middleware.cors import CORSMiddleware
+5|from motor.motor_asyncio import AsyncIOMotorClient
+6|import os
+7|import logging
+8|import random
+9|import uuid
+10|import httpx
+11|from pathlib import Path
+12|from pydantic import BaseModel, Field
+13|from typing import List, Optional, Dict, Any
+14|from datetime import datetime, timezone, timedelta
+15|
+16|from emergentintegrations.payments.stripe.checkout import (
+17|    StripeCheckout,
+18|    CheckoutSessionResponse,
+19|    CheckoutStatusResponse,
+20|    CheckoutSessionRequest,
+21|)
+22|
+23|ROOT_DIR = Path(__file__).parent
+24|load_dotenv(ROOT_DIR / ".env")
+25|
+26|mongo_url = os.environ["MONGO_URL"]
+27|client = AsyncIOMotorClient(mongo_url)
+28|db = client[os.environ["DB_NAME"]]
+29|
+30|STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "sk_test_emergent")
+31|
+32|app = FastAPI()
+33|api_router = APIRouter(prefix="/api")
+34|
+35|logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+36|logger = logging.getLogger(__name__)
+37|
+38|
+39|# ------- MODELS -------
+40|class User(BaseModel):
+41|    user_id: str
+42|    nickname: str
+43|    email: Optional[str] = None
+44|    picture: Optional[str] = None
+45|    is_premium: bool = False
+46|    auth_type: str = "nickname"  # nickname | google
+47|    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+48|
+49|
+50|class NicknameAuthRequest(BaseModel):
+51|    nickname: str
+52|
+53|
+54|class CreateRoomRequest(BaseModel):
+55|    user_id: str
+56|    name: Optional[str] = "Sala TalkieTool"
+57|
+58|
+59|class JoinRoomRequest(BaseModel):
+60|    user_id: str
+61|    code: str
+62|
+63|
+64|class VoiceMessageCreate(BaseModel):
+65|    room_code: str
+66|    user_id: str
+67|    audio_base64: str
+68|    duration_ms: int = 0
+69|
+70|
+71|class CheckoutRequest(BaseModel):
+72|    package_id: str  # premium_monthly
+73|    origin_url: str
+74|    user_id: str
+75|
+76|
+77|# Premium packages defined server-side
+78|PREMIUM_PACKAGES = {
+79|    "premium_monthly": {"amount": 2.99, "currency": "usd", "name": "TalkieTool Premium - Monthly"},
+80|}
+ [80 lines shown. Remaining: lines 81-514 (434 lines). Use view_range parameter to continue.]
